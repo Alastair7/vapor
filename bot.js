@@ -1,9 +1,22 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
 const configuration = require('./config.json');
 
-const bot = new Client({ intents: [GatewayIntentBits.Guilds] });
+const bot = new Client({
+	intents:
+	[
+		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMembers,
+		GatewayIntentBits.GuildMessages,
+		GatewayIntentBits.GuildMessageReactions,
+	],
+	partials:
+	[
+		Partials.Channel,
+		Partials.Message,
+		Partials.Reaction,
+	] });
 
 bot.commands = new Collection();
 
@@ -33,6 +46,7 @@ for (const folder of commandFolders) {
 for (const file of eventsFiles) {
 	const filePath = path.join(eventsPath, file);
 	const event = require(filePath);
+	console.log(event);
 
 	if (event.once) {
 		bot.once(event.name, (...args) => event.execute(...args));
