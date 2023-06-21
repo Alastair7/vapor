@@ -2,13 +2,14 @@ const { Events } = require('discord.js');
 
 module.exports = {
 	name: Events.MessageReactionAdd,
-	async execute(reaction, user) {
-		if (reaction.message.id === '1118996746597568723') {
-			if (reaction.emoji.name === '😄') {
+	async execute(user, reaction, messageId, emojiName, roleName) {
+		console.log(reaction);
+		if (reaction.message.id === messageId) {
+			if (reaction.emoji.name === emojiName) {
 				const guild = reaction.message.guild;
 				const member = guild.members.cache.get(user.id);
 
-				const role = guild.roles.cache.find(r => r.name === 'Foreigner');
+				const role = guild.roles.cache.find(r => r.name === roleName);
 
 				console.log(`Adding role ${role.name} to ${member.user.tag}`);
 				await member.roles.add(role);
