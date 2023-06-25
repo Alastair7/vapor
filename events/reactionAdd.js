@@ -1,20 +1,30 @@
 const { Events } = require('discord.js');
+const AutoroleMessage = require('../models/autoroleMessages.js');
 
 module.exports = {
 	name: Events.MessageReactionAdd,
-	async execute(user, reaction, messageId, emojiName, roleName) {
-		console.log(reaction);
-		if (reaction.message.id === messageId) {
-			if (reaction.emoji.name === emojiName) {
-				const guild = reaction.message.guild;
-				const member = guild.members.cache.get(user.id);
+	async execute(reaction, user) {
+		const channelId = reaction.message.channel.id;
+		if (channelId !== '1054096783397101678') {
+			return;
+		}
 
-				const role = guild.roles.cache.find(r => r.name === roleName);
+		const guild = reaction.message.guild;
+		const messageId = reaction.message.id;
 
-				console.log(`Adding role ${role.name} to ${member.user.tag}`);
-				await member.roles.add(role);
-				console.log(`Added role ${role.name} to ${member.user.tag}.`);
+		const existentMessage = await AutoroleMessage.findOne({ channelId, messageId });
+
+		if (existentMessage != null) {
+			const roleId = existentMessage.emojiMap.get(reaction.emoji.name);
+			if (roleId == undefined) {
+				console.log('Role not found in EmojiMap');
+				return;
 			}
+			console.log(roleId);
+			const role = guild.roles.cache.get(roleId);
+			const member = guild.members.cache.get(user.id);
+
+			await member.roles.add(role);
 		}
 	},
 };

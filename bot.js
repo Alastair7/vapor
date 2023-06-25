@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
 const configuration = require('./config.json');
+const mongoose = require('mongoose');
 
 const bot = new Client({
 	intents:
@@ -56,5 +57,15 @@ for (const file of eventsFiles) {
 	}
 }
 
+(async () => {
+	try {
+		mongoose.set('strictQuery', false);
+		await mongoose.connect(configuration.dbConnectionString, { dbName: 'vaporDB' });
+		console.log('Database connection eestablished succesfully.');
+	}
+	catch (error) {
+		console.error(`Error: ${error}`);
+	}
+})();
 
 bot.login(configuration['bot-token']);
