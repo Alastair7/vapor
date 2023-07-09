@@ -1,4 +1,5 @@
 const { ActionRowBuilder, ButtonBuilder, SlashCommandBuilder } = require('discord.js');
+const { handleButtonInteraction } = require('../../handlers/queueing/buttonHandler.js');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -18,7 +19,6 @@ module.exports = {
 			);
 
 		await interaction.reply({
-			content: '<<- ARKN MENU ->>',
 			components: [row],
 		});
 
@@ -30,14 +30,7 @@ module.exports = {
 		});
 
 		collector.on('collect', async (collectorInteraction) => {
-			if (collectorInteraction.isButton()) {
-				if (collectorInteraction.customId === 'lobby_menu') {
-					await collectorInteraction.reply('Lobby button clicked');
-				}
-				else if (collectorInteraction.customId === 'queue_menu') {
-					await collectorInteraction.reply('Queue button clicked.');
-				}
-			}
+			await handleButtonInteraction(collectorInteraction);
 		});
 
 		collector.on('end', () => {
