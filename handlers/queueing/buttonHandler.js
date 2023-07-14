@@ -1,7 +1,9 @@
-const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
+const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, InteractionType } = require('discord.js');
 
 async function handleButtonInteraction(buttonInteraction) {
+	console.log(`IsButton: ${buttonInteraction.isButton()}`);
 	if (buttonInteraction.isButton()) {
+		console.log(`InteractionId: ${buttonInteraction.customId}`);
 		if (buttonInteraction.customId === 'lobby_menu') {
 
 			const lobbyModal = new ModalBuilder()
@@ -30,7 +32,7 @@ async function handleButtonInteraction(buttonInteraction) {
 				.setCustomId('lobbyTypeInput')
 				.setLabel('Tipo')
 				.setStyle(TextInputStyle.Short)
-				.setPlaceholder('public o private');
+				.setPlaceholder('public or private');
 
 			const nameActionRow = new ActionRowBuilder().addComponents(lobbyNameInput);
 			const playersActionRow = new ActionRowBuilder().addComponents(lobbyPlayersInput);
@@ -39,10 +41,18 @@ async function handleButtonInteraction(buttonInteraction) {
 
 			lobbyModal.addComponents(nameActionRow, playersActionRow, gameActionRow, lobbyTypeActionRow);
 
-			await buttonInteraction.showModal(lobbyModal);
+			try {
+				console.log('Show modal executed');
+				await buttonInteraction.showModal(lobbyModal);
+
+				// TODO: Add Voice Channel
+			}
+			catch (error) {
+				console.error('An error occurred: ', error);
+			}
 		}
 		else if (buttonInteraction.customId === 'queue_menu') {
-			await buttonInteraction.reply('Queue button clicked.');
+			// await buttonInteraction.reply('Queue button clicked.');
 			// TODO: Open Queue form [DO NOT IMPLEMENT YET]
 		}
 	}
