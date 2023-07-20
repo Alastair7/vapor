@@ -31,7 +31,6 @@ module.exports = {
 			time: 60000,
 		});
 		console.log(`Data Collected ${collector}`);
-
 		collector.on('collect', async (collectorInteraction) => {
 			console.log(`On Collect activated ${collectorInteraction}`);
 			await handleButtonInteraction(collectorInteraction);

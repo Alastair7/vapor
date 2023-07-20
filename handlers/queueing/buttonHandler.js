@@ -44,8 +44,6 @@ async function handleButtonInteraction(buttonInteraction) {
 			try {
 				console.log('Show modal executed');
 				await buttonInteraction.showModal(lobbyModal);
-
-				// TODO: Add Voice Channel
 			}
 			catch (error) {
 				console.error('An error occurred: ', error);
