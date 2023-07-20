@@ -1,4 +1,4 @@
-const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, InteractionType } = require('discord.js');
+const { ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 
 async function handleButtonInteraction(buttonInteraction) {
 	console.log(`IsButton: ${buttonInteraction.isButton()}`);

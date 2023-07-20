@@ -1,4 +1,5 @@
-const { Events, InteractionType } = require('discord.js');
+const { Events, InteractionType, ChannelType } = require('discord.js');
+const GameCategories = require('../commons/enums/gameCategories.js');
 
 module.exports = {
 	name: Events.InteractionCreate,
@@ -31,18 +32,39 @@ module.exports = {
 				// Create Voice Channel
 				try {
 					// Get Modal Data
-
+					let category = '';
 					const lobbyName = interaction.fields.getTextInputValue('lobbyNameInput');
-					console.log(`Retrieved Lobby: ${lobbyName}`);
-					const lobbyPlayers = interaction.fields.getTextInputValue('lobbyPlayersInput');
-					console.log(`Retrieved Players: ${lobbyPlayers}`);
+					console.log(`Obtained Lobby: ${lobbyName}`);
 
-					const category = guild.channels.cache.get('1125860577831567360');
+					const lobbyPlayers = interaction.fields.getTextInputValue('lobbyPlayersInput');
+					console.log(`Obtained Players: ${lobbyPlayers}`);
+
+					const gameSelected = interaction.fields.getTextInputValue('lobbyGameInput');
+					console.log(`Obtained game: ${gameSelected}`);
+
+					switch (gameSelected) {
+					case 'lol': {
+						category = guild.channels.cache.get(GameCategories.LeagueOfLegends);
+						break;
+					}
+					case 'csgo': {
+						interaction.reply('Not implemented yet');
+						return;
+					}
+					default: {
+						interaction.reply('Unknown game provided');
+						return;
+					}
+					}
+					console.log(`GameCategoryId: ${GameCategories.LeagueOfLegends}`);
 
 					if (category) {
-						await guild.channels.create(lobbyName, {
-							type: 'GUILD_VOICE',
-							user_limit:lobbyPlayers,
+						await guild.channels.create({
+							name: lobbyName,
+							type: ChannelType.GuildVoice,
+							userLimit:parseInt(lobbyPlayers),
+							parent: category,
+							// TO-DO: Deny access to Everyone role but the user creating the channel and the client.
 						});
 
 						await interaction.reply('SUCCESS');
