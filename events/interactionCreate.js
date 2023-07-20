@@ -28,8 +28,6 @@ module.exports = {
 		}
 		case InteractionType.ModalSubmit: {
 			if (interaction.customId === 'lobby-creation-modal') {
-				console.log('Lobby Modal submitted');
-				// Create Voice Channel
 				try {
 					await CreateVoiceChannel(interaction, guild);
 				}
