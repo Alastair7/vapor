@@ -1,3 +1,3 @@
-const GameCategories = { LeagueOfLegends: '1125860577831567360' };
+const GameCategories = { LeagueOfLegends: '1125860577831567360' }
 
-module.exports = GameCategories;
+module.exports = GameCategories
