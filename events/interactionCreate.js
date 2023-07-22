@@ -1,4 +1,10 @@
-const { Events, InteractionType, ChannelType, PermissionsBitField } = require('discord.js')
+const {
+    Events,
+    InteractionType,
+    ChannelType,
+    PermissionsBitField,
+} = require('discord.js')
+
 const GameCategories = require('../commons/enums/gameCategories')
 
 async function generateLobby(guild, interaction) {
@@ -20,7 +26,6 @@ async function generateLobby(guild, interaction) {
                     GameCategories.LeagueOfLegends
                 )
                 if (!category) {
-                    console.error('Voice channel category not found')
                     return
                 }
 
@@ -29,15 +34,15 @@ async function generateLobby(guild, interaction) {
                     type: ChannelType.GuildVoice,
                     userLimit: parseInt(lobbyPlayers, 10),
                     parent: category,
-                    permissionOverwrites: [ 
+                    permissionOverwrites: [
                         {
                             id: interaction.user.id,
-                            allow: [PermissionsBitField.Flags.Connect]
-                        } ,
+                            allow: [PermissionsBitField.Flags.Connect],
+                        },
                         {
                             id: guild.roles.everyone,
-                            deny: [PermissionsBitField.Flags.Connect]
-                        }
+                            deny: [PermissionsBitField.Flags.Connect],
+                        },
                     ],
                 })
 
@@ -64,15 +69,11 @@ module.exports = {
 
         switch (interaction.type) {
             case InteractionType.ApplicationCommand: {
-                console.log('Interaction Command Executed')
                 const command = interaction.client.commands.get(
                     interaction.commandName
                 )
 
                 if (!command) {
-                    console.error(
-                        `No command matching ${interaction.commandName} was found`
-                    )
                     return
                 }
 
@@ -86,7 +87,6 @@ module.exports = {
             }
             case InteractionType.ModalSubmit: {
                 if (interaction.customId === 'lobby-creation-modal') {
-                    console.log('Lobby Modal submitted')
                     await generateLobby(guild, interaction)
                 }
                 break

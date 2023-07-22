@@ -1,10 +1,9 @@
 async function validatePermissions(commandInteraction, requiredRole) {
+    const role = commandInteraction.member.roles.cache.find(
+        (r) => r.id === requiredRole.id
+    )
 
-    console.log(`Required Role is ${requiredRole.id}`);
-    const role = commandInteraction.member.roles.cache.find(r => r.id === requiredRole.id);
-    console.log(`Role is: ${role}`);
-
-    return role ? true : false;
-} 
+    return !!role
+}
 
 module.exports = { validatePermissions }
