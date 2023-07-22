@@ -1,4 +1,4 @@
-const { Events, InteractionType, ChannelType } = require('discord.js')
+const { Events, InteractionType, ChannelType, PermissionsBitField } = require('discord.js')
 const GameCategories = require('../commons/enums/gameCategories')
 
 async function generateLobby(guild, interaction) {
@@ -10,7 +10,7 @@ async function generateLobby(guild, interaction) {
             interaction.fields.getTextInputValue('lobbyGameInput')
 
         if (!lobbyName || !lobbyPlayers || !gameSelected) {
-            interaction.reply('Invalid lobby data provided')
+            await interaction.reply('Invalid lobby data provided')
             return
         }
 
@@ -29,7 +29,16 @@ async function generateLobby(guild, interaction) {
                     type: ChannelType.GuildVoice,
                     userLimit: parseInt(lobbyPlayers, 10),
                     parent: category,
-                    // TO-DO: Deny access to Everyone role but the user creating the channel and the client.
+                    permissionOverwrites: [ 
+                        {
+                            id: interaction.user.id,
+                            allow: [PermissionsBitField.Flags.Connect]
+                        } ,
+                        {
+                            id: guild.roles.everyone,
+                            deny: [PermissionsBitField.Flags.Connect]
+                        }
+                    ],
                 })
 
                 await interaction.reply('SUCCESS')
