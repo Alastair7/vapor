@@ -1,7 +1,10 @@
-async function validatePermissions(commandInteraction, requiredRoles) {
-    const role = commandInteraction.member.roles.cache.find(r => r.name === requiredRoles);
+async function validatePermissions(commandInteraction, requiredRole) {
 
-    if (!role) {
-        commandInteraction.reply("You don't have the permission to execute this command.");
-    }
+    console.log(`Required Role is ${requiredRole.id}`);
+    const role = commandInteraction.member.roles.cache.find(r => r.id === requiredRole.id);
+    console.log(`Role is: ${role}`);
+
+    return role ? true : false;
 } 
+
+module.exports = { validatePermissions }

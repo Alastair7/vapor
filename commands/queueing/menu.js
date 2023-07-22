@@ -7,11 +7,19 @@ const {
     handleButtonInteraction,
 } = require('../../handlers/queueing/buttonHandler')
 
+const { validatePermissions } = require('../../commons/helpers/permissionHelper.js');
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('menu')
         .setDescription('Opens ARKN features menu'),
     async execute(interaction) {
+        const roleIsValid = await validatePermissions(interaction, interaction.guild.roles.everyone);
+        console.log(`Role is Valid: `, roleIsValid);
+        if (!roleIsValid) {
+            await interaction.reply("You don't have permissions to use this command.");
+            return;
+        }
         console.log('Executing ARKN MENU')
         const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
