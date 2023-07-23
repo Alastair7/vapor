@@ -6,8 +6,9 @@ const {
     GatewayIntentBits,
     Partials,
 } = require('discord.js')
-const configuration = require('./config.json')
 const mongoose = require('mongoose')
+const logger = require('./commons/Logging/winstonLogger')
+const configuration = require('./config.json')
 
 const bot = new Client({
     intents: [
@@ -22,6 +23,8 @@ const bot = new Client({
 
 bot.commands = new Collection()
 
+const relativePath = path.relative(process.cwd.toString(), __dirname)
+
 const foldersPath = path.join(__dirname, 'commands')
 const commandFolders = fs.readdirSync(foldersPath)
 
@@ -30,47 +33,51 @@ const eventsFiles = fs
     .readdirSync(eventsPath)
     .filter((file) => file.endsWith('.js'))
 
-for (const folder of commandFolders) {
+commandFolders.forEach((folder) => {
     const commandsPath = path.join(foldersPath, folder)
     const commandFiles = fs
         .readdirSync(commandsPath)
         .filter((file) => file.endsWith('.js'))
 
-    for (const file of commandFiles) {
+    commandFiles.forEach((file) => {
         const filePath = path.join(commandsPath, file)
+        // eslint-disable-next-line import/no-dynamic-require, global-require
         const command = require(filePath)
 
         if ('data' in command && 'execute' in command) {
             bot.commands.set(command.data.name, command)
         } else {
-            console.log(
-                `[WARNING] Command at ${filePath} is missing a required "data" or "execute" property.`
+            logger.warn(
+                `Command at ${filePath} is missing a required "data" or "execute" property.`,
+                { filePath: relativePath }
             )
         }
-    }
-}
+    })
+})
 
-for (const file of eventsFiles) {
+eventsFiles.forEach((file) => {
     const filePath = path.join(eventsPath, file)
+    // eslint-disable-next-line import/no-dynamic-require, global-require
     const event = require(filePath)
-    console.log(event)
+    logger.info(`${event.name} [EVENT] ->> OK`, { filePath: relativePath })
 
     if (event.once) {
         bot.once(event.name, (...args) => event.execute(...args))
     } else {
         bot.on(event.name, (...args) => event.execute(...args))
     }
-}
-
+})
 ;(async () => {
     try {
         mongoose.set('strictQuery', false)
         await mongoose.connect(configuration.dbConnectionString, {
             dbName: 'vaporDB',
         })
-        console.log('Database connection eestablished succesfully.')
+        logger.info('Database connection established succesfully.', {
+            filePath: relativePath,
+        })
     } catch (error) {
-        console.error(`Error: ${error}`)
+        logger.error(`Error: ${error}`, { filePath: relativePath })
     }
 })()
 
