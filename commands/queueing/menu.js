@@ -3,6 +3,13 @@ const {
     ButtonBuilder,
     SlashCommandBuilder,
 } = require('discord.js')
+
+const path = require('path')
+
+const logger = require('../../commons/Logging/winstonLogger')
+
+const filePath = path.relative(process.cwd.toString(), __dirname)
+
 const {
     handleButtonInteraction,
 } = require('../../handlers/queueing/buttonHandler')
@@ -16,6 +23,7 @@ module.exports = {
         .setName('menu')
         .setDescription('Opens ARKN features menu'),
     async execute(interaction) {
+        logger.info('Validating member permissions', { filePath })
         const roleIsValid = await validatePermissions(
             interaction,
             interaction.guild.roles.everyone
