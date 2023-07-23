@@ -1,5 +1,9 @@
+const path = require('path')
 const { SlashCommandBuilder } = require('discord.js')
 const AutoroleMessage = require('../../models/autoroleMessages')
+const logger = require('../../commons/Logging/winstonLogger')
+
+const filePath = path.relative(process.cwd.toString(), __dirname)
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -33,36 +37,39 @@ module.exports = {
 
         const emojiMap = new Map([[emojiName, roleName]])
 
-        console.log(
-            `Searching AutoroleMessage ${messageId} within channel ${channelId}`
+        logger.info(
+            `Searching AutoroleMessage ${messageId} in channel ${channelId}`,
+            { filePath }
         )
         const existingMessage = await AutoroleMessage.findOne({
-            channelId: channelId,
-            messageId: messageId,
+            channelId,
+            messageId,
         })
-        console.log(`Search result: ${existingMessage}`)
 
-        console.log(`Retrieving message ID: ${messageId}`)
         const message = await interaction.channel.messages.fetch(`${messageId}`)
-        console.log(`Retrieved message: ${messageId}`)
+
+        logger.info(`Retrieved message: ${messageId} in channel ${channelId}`, {
+            filePath,
+        })
 
         // React to message
-        console.log('Retrieving Guild Emojis')
-        console.log(`Retrieved emojiName: ${emojiName}`)
-
         await message.react(emojiName)
 
         if (existingMessage == null) {
             try {
                 const autoroleMessage = new AutoroleMessage({
-                    channelId: channelId,
-                    messageId: messageId,
-                    emojiMap: emojiMap,
+                    channelId,
+                    messageId,
+                    emojiMap,
                 })
                 await autoroleMessage.save()
-                console.log('AutoroleMessage added to database')
+                logger.info('AutoroleMessage added to database', {
+                    filePath,
+                })
             } catch (error) {
-                console.error('Error saving model', error)
+                logger.error(`Error saving model into DB: ${error}`, {
+                    filePath,
+                })
             }
         } else if (
             existingMessage != null &&
@@ -73,7 +80,6 @@ module.exports = {
             await existingMessage.save()
         }
 
-        interaction.reply('Reacción añadida mi loco')
-        console.log('SUCCESS')
+        interaction.reply('Reaction added')
     },
 }

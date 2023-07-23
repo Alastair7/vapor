@@ -1,5 +1,9 @@
 const { Events } = require('discord.js')
+const path = require('path')
+const logger = require('../commons/Logging/winstonLogger')
 const AutoroleMessage = require('../models/autoroleMessages')
+
+const filePath = path.relative(process.cwd.toString(), __dirname)
 
 module.exports = {
     name: Events.MessageReactionAdd,
@@ -21,10 +25,9 @@ module.exports = {
         if (existentMessage != null) {
             const roleId = existentMessage.emojiMap.get(reaction.emoji.name)
             if (roleId === undefined) {
-                console.log('Role not found in EmojiMap')
+                logger.error('Role not found in EmojiMap', { filePath })
                 return
             }
-            console.log(roleId)
             const role = guild.roles.cache.get(roleId)
             const member = guild.members.cache.get(user.id)
 

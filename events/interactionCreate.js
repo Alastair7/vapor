@@ -5,6 +5,12 @@ const {
     PermissionsBitField,
 } = require('discord.js')
 
+const path = require('path')
+
+const logger = require('../commons/Logging/winstonLogger')
+
+const filePath = path.relative(process.cwd.toString(), __dirname)
+
 const GameCategories = require('../commons/enums/gameCategories')
 
 async function generateLobby(guild, interaction) {
@@ -59,7 +65,9 @@ async function generateLobby(guild, interaction) {
             }
         }
     } catch (error) {
-        console.error('An error occurred during lobby creation:', error)
+        logger.error(`An error occurred during lobby creation: ${error}`, {
+            filePath,
+        })
     }
 }
 module.exports = {
@@ -80,8 +88,10 @@ module.exports = {
                 try {
                     await command.execute(interaction)
                 } catch (error) {
-                    console.error(`Error executing ${interaction.commandName}`)
-                    console.error(error)
+                    logger.error(`Error executing ${interaction.commandName}`, {
+                        filePath,
+                    })
+                    logger.error(`${error}`, { filePath })
                 }
                 break
             }

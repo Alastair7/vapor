@@ -1,5 +1,9 @@
 const { Events } = require('discord.js')
+const path = require('path')
+const logger = require('../commons/Logging/winstonLogger')
 const AutoroleMessage = require('../models/autoroleMessages')
+
+const filePath = path.relative(process.cwd.toString(), __dirname)
 
 module.exports = {
     name: Events.MessageReactionRemove,
@@ -23,7 +27,7 @@ module.exports = {
 
         const roleId = existentMessage.emojiMap.get(reaction.emoji.name)
         if (roleId === undefined) {
-            console.log('Value not found in EmojiMap')
+            logger.error('Value not found in EmojiMap', { filePath })
             return
         }
         const role = guild.roles.cache.get(roleId)
