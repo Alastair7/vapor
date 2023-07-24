@@ -8,10 +8,7 @@ module.exports = {
         .setName('test')
         .setDescription('Test Command'),
     async execute(interaction) {
-        const foreignerRole = interaction.guild.roles.cache.find(
-            (r) => r.name === 'Foreigner'
-        )
-        const isValid = await validatePermissions(interaction, foreignerRole)
+        const isValid = await validatePermissions(interaction, 'test')
 
         if (!isValid) {
             await interaction.reply(

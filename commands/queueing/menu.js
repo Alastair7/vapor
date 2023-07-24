@@ -24,10 +24,7 @@ module.exports = {
         .setDescription('Opens ARKN features menu'),
     async execute(interaction) {
         logger.info('Validating member permissions', { filePath })
-        const roleIsValid = await validatePermissions(
-            interaction,
-            interaction.guild.roles.everyone
-        )
+        const roleIsValid = await validatePermissions(interaction, 'menu')
 
         if (!roleIsValid) {
             await interaction.reply(
