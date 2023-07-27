@@ -20,6 +20,7 @@ async function generateLobby(guild, interaction) {
             interaction.fields.getTextInputValue('lobbyPlayersInput')
         const gameSelected =
             interaction.fields.getTextInputValue('lobbyGameInput')
+        let category = ''
 
         if (!lobbyName || !lobbyPlayers || !gameSelected) {
             await interaction.reply('Invalid lobby data provided')
@@ -28,35 +29,80 @@ async function generateLobby(guild, interaction) {
 
         switch (gameSelected) {
             case 'lol': {
-                const category = guild.channels.cache.get(
+                category = guild.channels.cache.get(
                     GameCategories.LeagueOfLegends
                 )
                 if (!category) {
+                    interaction.reply('No category found.')
                     return
                 }
-
-                await guild.channels.create({
-                    name: lobbyName,
-                    type: ChannelType.GuildVoice,
-                    userLimit: parseInt(lobbyPlayers, 10),
-                    parent: category,
-                    permissionOverwrites: [
-                        {
-                            id: interaction.user.id,
-                            allow: [PermissionsBitField.Flags.Connect],
-                        },
-                        {
-                            id: guild.roles.everyone,
-                            deny: [PermissionsBitField.Flags.Connect],
-                        },
-                    ],
-                })
-
-                await interaction.reply('SUCCESS')
                 break
             }
             case 'csgo': {
-                interaction.reply('Not implemented yet')
+                category = guild.channels.cache.get(
+                    GameCategories.CounterStrike
+                )
+
+                if (!category) {
+                    interaction.reply('No category found')
+                    return
+                }
+                break
+            }
+            case 'sot': {
+                category = guild.channels.cache.get(GameCategories.SeaOfThieves)
+
+                if (!category) {
+                    interaction.reply('No category found')
+                    return
+                }
+                break
+            }
+            case 'mh': {
+                category = guild.channels.cache.get(
+                    GameCategories.MonsterHunter
+                )
+
+                if (!category) {
+                    interaction.reply('No category found')
+                    return
+                }
+                break
+            }
+            case 'valorant': {
+                category = guild.channels.cache.get(GameCategories.Valorant)
+
+                if (!category) {
+                    interaction.reply('No category found')
+                    return
+                }
+                break
+            }
+            case 'r6': {
+                category = guild.channels.cache.get(GameCategories.RainbowSix)
+
+                if (!category) {
+                    interaction.reply('No category found')
+                    return
+                }
+                break
+            }
+            case 'cod': {
+                category = guild.channels.cache.get(GameCategories.CallOfDuty)
+
+                if (!category) {
+                    interaction.reply('No category found')
+                    return
+                }
+                break
+            }
+            case 'mc': {
+                category = guild.channels.cache.get(GameCategories.Minecraft)
+
+                if (!category) {
+                    interaction.reply('No category found')
+                    return
+                }
                 break
             }
             default: {
@@ -64,6 +110,25 @@ async function generateLobby(guild, interaction) {
                 break
             }
         }
+
+        await guild.channels.create({
+            name: lobbyName,
+            type: ChannelType.GuildVoice,
+            userLimit: parseInt(lobbyPlayers, 10),
+            parent: category,
+            permissionOverwrites: [
+                {
+                    id: interaction.user.id,
+                    allow: [PermissionsBitField.Flags.Connect],
+                },
+                {
+                    id: guild.roles.everyone,
+                    deny: [PermissionsBitField.Flags.Connect],
+                },
+            ],
+        })
+
+        interaction.reply(`Channel created in category ${category}`)
     } catch (error) {
         logger.error(`An error occurred during lobby creation: ${error}`, {
             filePath,
