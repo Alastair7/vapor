@@ -11,7 +11,7 @@ const logger = require('../commons/Logging/winstonLogger')
 
 const filePath = path.relative(process.cwd.toString(), __dirname)
 
-const GameCategories = require('../commons/enums/gameCategories')
+const GameCategoriesID = require('../commons/enums/gameCategories')
 
 async function generateLobby(guild, interaction) {
     try {
@@ -20,95 +20,17 @@ async function generateLobby(guild, interaction) {
             interaction.fields.getTextInputValue('lobbyPlayersInput')
         const gameSelected =
             interaction.fields.getTextInputValue('lobbyGameInput')
-        let category = ''
 
         if (!lobbyName || !lobbyPlayers || !gameSelected) {
             await interaction.reply('Invalid lobby data provided')
             return
         }
+        const category =
+            GameCategoriesID[gameSelected]?.() ?? GameCategoriesID.default()
 
-        switch (gameSelected) {
-            case 'lol': {
-                category = guild.channels.cache.get(
-                    GameCategories.LeagueOfLegends
-                )
-                if (!category) {
-                    interaction.reply('No category found.')
-                    return
-                }
-                break
-            }
-            case 'csgo': {
-                category = guild.channels.cache.get(
-                    GameCategories.CounterStrike
-                )
-
-                if (!category) {
-                    interaction.reply('No category found')
-                    return
-                }
-                break
-            }
-            case 'sot': {
-                category = guild.channels.cache.get(GameCategories.SeaOfThieves)
-
-                if (!category) {
-                    interaction.reply('No category found')
-                    return
-                }
-                break
-            }
-            case 'mh': {
-                category = guild.channels.cache.get(
-                    GameCategories.MonsterHunter
-                )
-
-                if (!category) {
-                    interaction.reply('No category found')
-                    return
-                }
-                break
-            }
-            case 'valorant': {
-                category = guild.channels.cache.get(GameCategories.Valorant)
-
-                if (!category) {
-                    interaction.reply('No category found')
-                    return
-                }
-                break
-            }
-            case 'r6': {
-                category = guild.channels.cache.get(GameCategories.RainbowSix)
-
-                if (!category) {
-                    interaction.reply('No category found')
-                    return
-                }
-                break
-            }
-            case 'cod': {
-                category = guild.channels.cache.get(GameCategories.CallOfDuty)
-
-                if (!category) {
-                    interaction.reply('No category found')
-                    return
-                }
-                break
-            }
-            case 'mc': {
-                category = guild.channels.cache.get(GameCategories.Minecraft)
-
-                if (!category) {
-                    interaction.reply('No category found')
-                    return
-                }
-                break
-            }
-            default: {
-                interaction.reply('Unknown game provided')
-                break
-            }
+        if (category === 'UNKNOWN') {
+            await interaction.reply('Unknown Category')
+            return
         }
 
         await guild.channels.create({

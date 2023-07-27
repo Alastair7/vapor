@@ -33,7 +33,7 @@ async function handleButtonInteraction(buttonInteraction) {
                 .setCustomId('lobbyGameInput')
                 .setLabel('Juego')
                 .setStyle(TextInputStyle.Short)
-                .setPlaceholder('lol, rust, csgo, valorant...')
+                .setPlaceholder('lol, mh, cod, cs, valorant, mc, r6, sot')
 
             const lobbyTypeInput = new TextInputBuilder()
                 .setCustomId('lobbyTypeInput')
