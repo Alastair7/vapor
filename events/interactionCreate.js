@@ -12,6 +12,9 @@ const logger = require('../commons/Logging/winstonLogger')
 const filePath = path.relative(process.cwd.toString(), __dirname)
 
 const GameCategoriesID = require('../commons/enums/gameCategories')
+const {
+    handleButtonInteraction,
+} = require('../handlers/queueing/buttonHandler')
 
 async function generateLobby(guild, interaction) {
     try {
@@ -22,14 +25,20 @@ async function generateLobby(guild, interaction) {
             interaction.fields.getTextInputValue('lobbyGameInput')
 
         if (!lobbyName || !lobbyPlayers || !gameSelected) {
-            await interaction.reply('Invalid lobby data provided')
+            interaction.reply({
+                content: 'Invalid lobby data provided',
+                ephemeral: true,
+            })
             return
         }
         const category =
             GameCategoriesID[gameSelected]?.() ?? GameCategoriesID.default()
 
         if (category === 'UNKNOWN') {
-            await interaction.reply('Unknown Category')
+            await interaction.reply({
+                content: 'Unknown Category',
+                ephemeral: true,
+            })
             return
         }
 
@@ -50,7 +59,10 @@ async function generateLobby(guild, interaction) {
             ],
         })
 
-        interaction.reply(`Channel created in category ${category}`)
+        interaction.reply({
+            content: `Channel created in category ${category}`,
+            ephemeral: true,
+        })
     } catch (error) {
         logger.error(`An error occurred during lobby creation: ${error}`, {
             filePath,
@@ -88,7 +100,14 @@ module.exports = {
                 }
                 break
             }
+            case InteractionType.MessageComponent: {
+                if (interaction.customId === 'lobby_menu') {
+                    await handleButtonInteraction(interaction)
+                }
+                break
+            }
             default:
+                break
         }
     },
 }
