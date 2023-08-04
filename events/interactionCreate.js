@@ -16,15 +16,20 @@ const {
     handleButtonInteraction,
 } = require('../handlers/queueing/buttonHandler')
 
+function getModalInputValue(interaction, fieldID) {
+    return interaction.fields.getTextInputValue(fieldID)
+}
+
 async function generateLobby(guild, interaction) {
     try {
-        const lobbyName = interaction.fields.getTextInputValue('lobbyNameInput')
-        const lobbyPlayers =
-            interaction.fields.getTextInputValue('lobbyPlayersInput')
-        const gameSelected =
-            interaction.fields.getTextInputValue('lobbyGameInput')
+        const lobbyName = getModalInputValue(interaction, 'lobbyNameInput')
+        const lobbyPlayers = getModalInputValue(
+            interaction,
+            'lobbyPlayersInput'
+        )
+        const selectedGame = getModalInputValue(interaction, 'lobbyGameInput')
 
-        if (!lobbyName || !lobbyPlayers || !gameSelected) {
+        if (!lobbyName || !lobbyPlayers || !selectedGame) {
             interaction.reply({
                 content: 'Invalid lobby data provided',
                 ephemeral: true,
@@ -32,7 +37,7 @@ async function generateLobby(guild, interaction) {
             return
         }
         const category =
-            GameCategoriesID[gameSelected]?.() ?? GameCategoriesID.default()
+            GameCategoriesID[selectedGame]?.() ?? GameCategoriesID.default()
 
         if (category === 'UNKNOWN') {
             await interaction.reply({
