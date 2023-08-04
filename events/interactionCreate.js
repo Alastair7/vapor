@@ -12,24 +12,38 @@ const logger = require('../commons/Logging/winstonLogger')
 const filePath = path.relative(process.cwd.toString(), __dirname)
 
 const GameCategoriesID = require('../commons/enums/gameCategories')
+const {
+    handleButtonInteraction,
+} = require('../handlers/queueing/buttonHandler')
+
+function getModalInputValue(interaction, fieldID) {
+    return interaction.fields.getTextInputValue(fieldID)
+}
 
 async function generateLobby(guild, interaction) {
     try {
-        const lobbyName = interaction.fields.getTextInputValue('lobbyNameInput')
-        const lobbyPlayers =
-            interaction.fields.getTextInputValue('lobbyPlayersInput')
-        const gameSelected =
-            interaction.fields.getTextInputValue('lobbyGameInput')
+        const lobbyName = getModalInputValue(interaction, 'lobbyNameInput')
+        const lobbyPlayers = getModalInputValue(
+            interaction,
+            'lobbyPlayersInput'
+        )
+        const selectedGame = getModalInputValue(interaction, 'lobbyGameInput')
 
-        if (!lobbyName || !lobbyPlayers || !gameSelected) {
-            await interaction.reply('Invalid lobby data provided')
+        if (!lobbyName || !lobbyPlayers || !selectedGame) {
+            interaction.reply({
+                content: 'Invalid lobby data provided',
+                ephemeral: true,
+            })
             return
         }
         const category =
-            GameCategoriesID[gameSelected]?.() ?? GameCategoriesID.default()
+            GameCategoriesID[selectedGame]?.() ?? GameCategoriesID.default()
 
         if (category === 'UNKNOWN') {
-            await interaction.reply('Unknown Category')
+            await interaction.reply({
+                content: 'Unknown Category',
+                ephemeral: true,
+            })
             return
         }
 
@@ -50,7 +64,10 @@ async function generateLobby(guild, interaction) {
             ],
         })
 
-        interaction.reply(`Channel created in category ${category}`)
+        interaction.reply({
+            content: `Channel created in category ${category}`,
+            ephemeral: true,
+        })
     } catch (error) {
         logger.error(`An error occurred during lobby creation: ${error}`, {
             filePath,
@@ -88,7 +105,14 @@ module.exports = {
                 }
                 break
             }
+            case InteractionType.MessageComponent: {
+                if (interaction.customId === 'lobby_menu') {
+                    await handleButtonInteraction(interaction)
+                }
+                break
+            }
             default:
+                break
         }
     },
 }

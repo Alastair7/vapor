@@ -2,10 +2,10 @@ const {
     ActionRowBuilder,
     ModalBuilder,
     TextInputBuilder,
-    TextInputStyle,
 } = require('discord.js')
 
 const path = require('path')
+const menuConfig = require('../../commons/configs/menuConfig')
 const logger = require('../../commons/Logging/winstonLogger')
 
 const filePath = path.relative(process.cwd.toString(), __dirname)
@@ -17,49 +17,19 @@ async function handleButtonInteraction(buttonInteraction) {
                 .setCustomId('lobby-creation-modal')
                 .setTitle('CREAR LOBBY')
 
-            const lobbyNameInput = new TextInputBuilder()
-                .setCustomId('lobbyNameInput')
-                .setLabel('Nombre Lobby')
-                .setStyle(TextInputStyle.Short)
-                .setPlaceholder('Nombre de la sala')
+            const menuInputs = menuConfig.map((input) => {
+                return new TextInputBuilder()
+                    .setCustomId(input.id)
+                    .setLabel(input.label)
+                    .setStyle(input.style)
+                    .setPlaceholder(input.placeholder)
+            })
 
-            const lobbyPlayersInput = new TextInputBuilder()
-                .setCustomId('lobbyPlayersInput')
-                .setLabel('Jugadores')
-                .setStyle(TextInputStyle.Short)
-                .setPlaceholder('Número de jugadores')
+            const components = menuInputs.map((component) => {
+                return new ActionRowBuilder().addComponents(component)
+            })
 
-            const lobbyGameInput = new TextInputBuilder()
-                .setCustomId('lobbyGameInput')
-                .setLabel('Juego')
-                .setStyle(TextInputStyle.Short)
-                .setPlaceholder('lol, mh, cod, cs, valorant, mc, r6, sot')
-
-            const lobbyTypeInput = new TextInputBuilder()
-                .setCustomId('lobbyTypeInput')
-                .setLabel('Tipo')
-                .setStyle(TextInputStyle.Short)
-                .setPlaceholder('public or private')
-
-            const nameActionRow = new ActionRowBuilder().addComponents(
-                lobbyNameInput
-            )
-            const playersActionRow = new ActionRowBuilder().addComponents(
-                lobbyPlayersInput
-            )
-            const gameActionRow = new ActionRowBuilder().addComponents(
-                lobbyGameInput
-            )
-            const lobbyTypeActionRow = new ActionRowBuilder().addComponents(
-                lobbyTypeInput
-            )
-
-            lobbyModal.addComponents(
-                nameActionRow,
-                playersActionRow,
-                gameActionRow,
-                lobbyTypeActionRow
-            )
+            lobbyModal.addComponents(...components)
 
             try {
                 await buttonInteraction.showModal(lobbyModal)

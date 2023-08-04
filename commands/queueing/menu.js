@@ -11,10 +11,6 @@ const logger = require('../../commons/Logging/winstonLogger')
 const filePath = path.relative(process.cwd.toString(), __dirname)
 
 const {
-    handleButtonInteraction,
-} = require('../../handlers/queueing/buttonHandler')
-
-const {
     validatePermissions,
 } = require('../../commons/helpers/permissionHelper')
 
@@ -46,25 +42,6 @@ module.exports = {
 
         await interaction.reply({
             components: [row],
-        })
-
-        const collector =
-            await interaction.channel.createMessageComponentCollector({
-                filter: (i) => i.user.id === interaction.user.id,
-                max: 1,
-                time: 60000,
-            })
-
-        collector.on('collect', async (collectorInteraction) => {
-            await handleButtonInteraction(collectorInteraction)
-            collector.stop()
-        })
-
-        collector.on('end', async () => {
-            await interaction.editReply({
-                content: 'Información procesada',
-                components: [],
-            })
         })
     },
 }
