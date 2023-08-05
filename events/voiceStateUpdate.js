@@ -10,10 +10,8 @@ function checkCategoryExists(channelCategory) {
 module.exports = {
     name: Events.VoiceStateUpdate,
     async execute(oldState, newState) {
-        console.log('Voice State Executed')
         const { channel } = newState
 
-        console.log(`${channel}`)
         // Feature: Delete a voice channel when there are no users connected
         if (!channel) return
         // Scenario: Voice Channel doesn't exist in any category
