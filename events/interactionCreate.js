@@ -38,7 +38,7 @@ async function sendNotification(interaction, selectedGame, newChannel) {
         })
         .setDescription('Looking for players')
         .setThumbnail(
-            interaction.member.displayAvatarURL({
+            interaction.guild.iconURL({
                 forceStatic: false,
                 size: 2048,
             })
@@ -55,7 +55,12 @@ async function sendNotification(interaction, selectedGame, newChannel) {
                 inline: true,
             }
         )
+        .setColor('#d95033')
         .setTimestamp()
+        .setFooter({
+            text: 'Lobby will be deleted automatically within 30 secs if remains empty',
+            iconURL: interaction.client.user.displayAvatarURL(),
+        })
 
     const notificationChannel =
         NotificationChannelsID[selectedGame]?.() ??
@@ -82,8 +87,9 @@ async function generateLobby(guild, interaction) {
             'lobbyPlayersInput'
         )
         const selectedGame = getModalInputValue(interaction, 'lobbyGameInput')
-
-        if (!lobbyName || !lobbyPlayers || !selectedGame) {
+        const lobbyType = getModalInputValue(interaction, 'lobbyTypeInput')
+        let newChannel
+        if (!lobbyName || !lobbyPlayers || !selectedGame || !lobbyType) {
             interaction.reply({
                 content: 'Invalid lobby data provided',
                 ephemeral: true,
@@ -101,27 +107,48 @@ async function generateLobby(guild, interaction) {
             return
         }
 
-        const newChannel = await guild.channels.create({
-            name: lobbyName,
-            type: ChannelType.GuildVoice,
-            userLimit: parseInt(lobbyPlayers, 10),
-            parent: category,
-            permissionOverwrites: [
-                {
-                    id: interaction.user.id,
-                    allow: [PermissionsBitField.Flags.Connect],
-                },
-                {
-                    id: guild.roles.everyone,
-                    deny: [PermissionsBitField.Flags.Connect],
-                },
-            ],
-        })
+        if (lobbyType === 'public') {
+            newChannel = await guild.channels.create({
+                name: lobbyName,
+                type: ChannelType.GuildVoice,
+                userLimit: parseInt(lobbyPlayers, 10),
+                parent: category,
+                permissionOverwrites: [
+                    {
+                        id: interaction.user.id,
+                        allow: [PermissionsBitField.Flags.Connect],
+                    },
+                    {
+                        id: guild.roles.everyone,
+                        allow: [PermissionsBitField.Flags.Connect],
+                    },
+                ],
+            })
+        } else {
+            newChannel = await guild.channels.create({
+                name: lobbyName,
+                type: ChannelType.GuildVoice,
+                userLimit: parseInt(lobbyPlayers, 10),
+                parent: category,
+                permissionOverwrites: [
+                    {
+                        id: interaction.user.id,
+                        allow: [PermissionsBitField.Flags.Connect],
+                    },
+                    {
+                        id: guild.roles.everyone,
+                        deny: [PermissionsBitField.Flags.Connect],
+                    },
+                ],
+            })
+        }
 
-        await sendNotification(interaction, selectedGame, newChannel)
+        if (lobbyType === 'public') {
+            await sendNotification(interaction, selectedGame, newChannel)
+        }
 
         interaction.reply({
-            content: `Channel created in category ${category}`,
+            content: `Lobby created ->> ${newChannel.toString()}`,
             ephemeral: true,
         })
     } catch (error) {
