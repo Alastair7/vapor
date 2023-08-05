@@ -151,6 +151,12 @@ async function generateLobby(guild, interaction) {
             content: `Lobby created ->> ${newChannel.toString()}`,
             ephemeral: true,
         })
+
+        setTimeout(async () => {
+            if (newChannel.members.size <= 0) {
+                await newChannel.delete()
+            }
+        }, 30000)
     } catch (error) {
         logger.error(`An error occurred during lobby creation: ${error}`, {
             filePath,
