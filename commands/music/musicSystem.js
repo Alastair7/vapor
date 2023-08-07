@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js')
-const { QueryType } = require('discord-player')
+const { useQueue } = require('discord-player')
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -68,6 +68,7 @@ module.exports = {
         }),
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand()
+        const musicPlayer = interaction.client.player
 
         switch (subcommand) {
             case 'play':
@@ -80,7 +81,6 @@ module.exports = {
                         return
                     }
 
-                    const musicPlayer = interaction.client.player
                     const musicQuery = interaction.options.getString('song')
 
                     await interaction.deferReply()
@@ -123,8 +123,67 @@ module.exports = {
                 }
                 break
             case 'stop':
+                {
+                    if (!interaction.member.voice.channel) {
+                        interaction.reply(
+                            'You are not connected to a voice channel'
+                        )
+                        return
+                    }
+
+                    await interaction.deferReply()
+                    const queue = useQueue(interaction.guild.id)
+
+                    if (!queue?.currentTrack) {
+                        interaction.followUp('There is no song playing')
+                        return
+                    }
+
+                    queue.node.stop()
+
+                    interaction.followUp('Song stopped')
+                }
+                break
+            case 'pause':
+                {
+                    if (!interaction.member.voice.channel) {
+                        interaction.reply(
+                            'You are not connected to a voice channel'
+                        )
+                        return
+                    }
+
+                    await interaction.deferReply()
+                    const queue = useQueue(interaction.guild.id)
+
+                    if (!queue?.isPlaying()) {
+                        interaction.followUp('Song is already stopped')
+                        return
+                    }
+                    queue.node.pause()
+                    interaction.followUp('Song is paused')
+                }
                 break
             case 'resume':
+                {
+                    if (!interaction.member.voice.channel) {
+                        interaction.reply(
+                            'You are not connected to a voice channel'
+                        )
+                        return
+                    }
+
+                    await interaction.deferReply()
+                    const queue = useQueue(interaction.guild.id)
+
+                    if (!queue?.node.isPaused()) {
+                        interaction.followUp('Song is already playing')
+                        return
+                    }
+
+                    queue.node.resume()
+                    interaction.followUp('Song resumed')
+                }
                 break
             default:
                 break
