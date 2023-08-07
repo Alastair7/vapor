@@ -7,6 +7,7 @@ const {
     Partials,
 } = require('discord.js')
 const mongoose = require('mongoose')
+const { Player } = require('discord-player')
 const logger = require('./commons/Logging/winstonLogger')
 const configuration = require('./config.json')
 
@@ -80,5 +81,9 @@ eventsFiles.forEach((file) => {
         logger.error(`Error: ${error}`, { filePath: relativePath })
     }
 })()
+
+const player = new Player(bot)
+bot.player = player
+player.extractors.loadDefault()
 
 bot.login(configuration['bot-token'])
