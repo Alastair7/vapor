@@ -1,12 +1,15 @@
 const { SlashCommandBuilder } = require('discord.js')
 const { useQueue } = require('discord-player')
 const voiceHelper = require('../../commons/helpers/voiceHelper')
+const {
+    validatePermissions,
+} = require('../../commons/helpers/permissionHelper')
 
 async function getMusicPlayerStatus(queue) {
-    if (!queue?.currentTrack) {
+    if (!queue?.current) {
         return 'STOPPED'
     }
-    if (queue.isPaused()) {
+    if (queue.paused) {
         return 'PAUSED'
     }
     return 'PLAYING'
@@ -125,6 +128,45 @@ async function resume(interaction) {
     interaction.followUp('Song resumed')
 }
 
+async function skip(interaction) {
+    // Feature: Skip current playing song.
+
+    // Scenario: Guild Member types /music skip
+    // When: he is not connected to a voice channel
+    // Then: Bot replies error
+    if (!voiceHelper.isMemberInVoiceChannel(interaction)) {
+        interaction.reply('You are not connected to a voice channel')
+        return
+    }
+
+    const roleCanSkip = validatePermissions(interaction, 'MUSIC_SKIP')
+
+    await interaction.deferReply()
+
+    const queue = useQueue(interaction.guild.id)
+    const musicPlayerStatus = getMusicPlayerStatus(queue)
+
+    // Scenario: Guild Member with admin permissions types /music skip
+    // When: Bot is playing music
+    // Then: Song is skipped
+
+    if (musicPlayerStatus !== 'PLAYING') {
+        await interaction.followUp('No track to skip')
+        return
+    }
+
+    if (roleCanSkip) {
+        queue.node.skip()
+    }
+    // Scenario: Guild Member with no admin permissions types /music skip
+    // When: Bot is playing music
+    // Then: Collect members reactions
+    // And: Bots collect within 20 secs voice channel votes
+    // Then: Bots skips the song
+
+    await interaction.followUp('Song skipped')
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('music')
@@ -163,6 +205,9 @@ module.exports = {
                         .setName('level')
                         .setDescription('Set the volume level')
                 })
+        })
+        .addSubcommand((sc) => {
+            return sc.setName('skip').setDescription('Skip current song')
         })
         .addSubcommandGroup((scGroup) => {
             return scGroup
@@ -206,6 +251,9 @@ module.exports = {
                 break
             case 'resume':
                 await resume(interaction)
+                break
+            case 'skip':
+                await skip(interaction)
                 break
             default:
                 await interaction.reply('Unknown Subcommand')
