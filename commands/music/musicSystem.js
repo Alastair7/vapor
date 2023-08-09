@@ -1,5 +1,129 @@
 const { SlashCommandBuilder } = require('discord.js')
 const { useQueue } = require('discord-player')
+const voiceHelper = require('../../commons/helpers/voiceHelper')
+
+async function getMusicPlayerStatus(queue) {
+    if (!queue?.currentTrack) {
+        return 'STOPPED'
+    }
+    if (queue.isPaused()) {
+        return 'PAUSED'
+    }
+    return 'PLAYING'
+}
+async function searchSong(searchQuery, musicPlayer) {
+    const searchResult = await musicPlayer.search(searchQuery)
+
+    if (!searchResult?.hasTracks()) return 'No tracks found'
+
+    return searchResult
+}
+
+async function play(interaction, musicPlayer) {
+    const voiceChannel = interaction.member.voice.channel
+
+    if (!voiceHelper.isMemberInVoiceChannel(interaction)) {
+        interaction.reply('You must be connected to a voice channel')
+        return
+    }
+
+    const musicQuery = interaction.options.getString('song')
+
+    await interaction.deferReply()
+
+    const searchResult = await searchSong(musicQuery, musicPlayer)
+
+    if (!searchResult)
+        await interaction.followUp({
+            content: 'No result found',
+        })
+
+    try {
+        await musicPlayer.play(voiceChannel, searchResult, {
+            nodeOptions: {
+                metadata: {
+                    channel: interaction.channel,
+                    client: interaction.client,
+                    requestedBy: interaction.user.username,
+                },
+                leaveOnEmptyCooldown: 300000,
+                leaveOnEmpty: true,
+                leaveOnEnd: false,
+                bufferingTimeOut: 0,
+                volume: 100,
+                selfDeaf: false,
+            },
+        })
+    } catch (error) {
+        console.log(error)
+    }
+
+    await interaction.followUp({
+        content: `⏱ | Loading your ${
+            searchResult.playlist ? 'playlist' : 'track'
+        }...`,
+    })
+
+    await interaction.followUp({
+        content: 'Song added into the queue',
+    })
+}
+
+async function stop(interaction) {
+    if (!voiceHelper.isMemberInVoiceChannel(interaction)) {
+        interaction.reply('You are not connected to a voice channel')
+        return
+    }
+
+    await interaction.deferReply()
+    const queue = useQueue(interaction.guild.id)
+
+    const musicPlayerStatus = getMusicPlayerStatus(queue)
+
+    if (musicPlayerStatus === 'STOPPED') {
+        interaction.followUp('No song is playing')
+        return
+    }
+    queue.node.stop()
+    interaction.followUp('Song stopped')
+}
+
+async function pause(interaction) {
+    if (!voiceHelper.isMemberInVoiceChannel(interaction)) {
+        interaction.reply('You are not connected to a voice channel')
+        return
+    }
+
+    await interaction.deferReply()
+    const queue = useQueue(interaction.guild.id)
+
+    const musicPlayerStatus = getMusicPlayerStatus(queue)
+
+    if (musicPlayerStatus === 'PAUSED') {
+        interaction.followUp('Song is already paused')
+        return
+    }
+    queue.node.pause()
+    interaction.followUp('Song is paused')
+}
+
+async function resume(interaction) {
+    if (!interaction.member.voice.channel) {
+        interaction.reply('You are not connected to a voice channel')
+        return
+    }
+
+    await interaction.deferReply()
+    const queue = useQueue(interaction.guild.id)
+
+    if (!queue?.node.isPaused()) {
+        interaction.followUp('Song is already playing')
+        return
+    }
+
+    queue.node.resume()
+    interaction.followUp('Song resumed')
+}
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -72,120 +196,19 @@ module.exports = {
 
         switch (subcommand) {
             case 'play':
-                {
-                    const voiceChannel = interaction.member.voice.channel
-                    if (!voiceChannel) {
-                        interaction.reply(
-                            'You must be connected to a voice channel'
-                        )
-                        return
-                    }
-
-                    const musicQuery = interaction.options.getString('song')
-
-                    await interaction.deferReply()
-
-                    const searchResult = await musicPlayer.search(musicQuery)
-
-                    if (!searchResult.hasTracks()) {
-                        interaction.followUp({ content: 'No result found' })
-                        return
-                    }
-
-                    try {
-                        await musicPlayer.play(voiceChannel, searchResult, {
-                            nodeOptions: {
-                                metadata: {
-                                    channel: interaction.channel,
-                                    client: interaction.client,
-                                    requestedBy: interaction.user.username,
-                                },
-                                leaveOnEmptyCooldown: 300000,
-                                leaveOnEmpty: true,
-                                leaveOnEnd: false,
-                                bufferingTimeOut: 0,
-                                volume: 10,
-                            },
-                        })
-
-                        await interaction.followUp({
-                            content: `⏱ | Loading your ${
-                                searchResult.playlist ? 'playlist' : 'track'
-                            }...`,
-                        })
-                    } catch (error) {
-                        console.log(error)
-                    }
-
-                    await interaction.followUp({
-                        content: 'Song added into the queue',
-                    })
-                }
+                await play(interaction, musicPlayer)
                 break
             case 'stop':
-                {
-                    if (!interaction.member.voice.channel) {
-                        interaction.reply(
-                            'You are not connected to a voice channel'
-                        )
-                        return
-                    }
-
-                    await interaction.deferReply()
-                    const queue = useQueue(interaction.guild.id)
-
-                    if (!queue?.currentTrack) {
-                        interaction.followUp('There is no song playing')
-                        return
-                    }
-
-                    queue.node.stop()
-
-                    interaction.followUp('Song stopped')
-                }
+                await stop(interaction)
                 break
             case 'pause':
-                {
-                    if (!interaction.member.voice.channel) {
-                        interaction.reply(
-                            'You are not connected to a voice channel'
-                        )
-                        return
-                    }
-
-                    await interaction.deferReply()
-                    const queue = useQueue(interaction.guild.id)
-
-                    if (!queue?.isPlaying()) {
-                        interaction.followUp('Song is already stopped')
-                        return
-                    }
-                    queue.node.pause()
-                    interaction.followUp('Song is paused')
-                }
+                await pause(interaction)
                 break
             case 'resume':
-                {
-                    if (!interaction.member.voice.channel) {
-                        interaction.reply(
-                            'You are not connected to a voice channel'
-                        )
-                        return
-                    }
-
-                    await interaction.deferReply()
-                    const queue = useQueue(interaction.guild.id)
-
-                    if (!queue?.node.isPaused()) {
-                        interaction.followUp('Song is already playing')
-                        return
-                    }
-
-                    queue.node.resume()
-                    interaction.followUp('Song resumed')
-                }
+                await resume(interaction)
                 break
             default:
+                await interaction.reply('Unknown Subcommand')
                 break
         }
     },
