@@ -8,14 +8,13 @@ const filePath = path.relative(process.cwd.toString(), __dirname)
 module.exports = {
     name: Events.MessageReactionAdd,
     async execute(reaction, user) {
-        const { message } = reaction.message
-        const channelId = message.channel.id
+        console.log('Reaction Event Add Triggered')
+        const { channelId, id, guild } = reaction.message
+        console.log(channelId)
         if (channelId !== '1054096783397101678') {
             return
         }
-
-        const { guild } = message
-        const messageId = message.id
+        const messageId = id
 
         const existentMessage = await AutoroleMessage.findOne({
             channelId,

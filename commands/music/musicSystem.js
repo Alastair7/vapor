@@ -6,7 +6,7 @@ const {
 } = require('../../commons/helpers/permissionHelper')
 
 async function getMusicPlayerStatus(queue) {
-    if (!queue?.current) {
+    if (!queue?.currentTrack) {
         return 'STOPPED'
     }
     if (queue.paused) {
@@ -129,11 +129,6 @@ async function resume(interaction) {
 }
 
 async function skip(interaction) {
-    // Feature: Skip current playing song.
-
-    // Scenario: Guild Member types /music skip
-    // When: he is not connected to a voice channel
-    // Then: Bot replies error
     if (!voiceHelper.isMemberInVoiceChannel(interaction)) {
         interaction.reply('You are not connected to a voice channel')
         return
@@ -146,25 +141,45 @@ async function skip(interaction) {
     const queue = useQueue(interaction.guild.id)
     const musicPlayerStatus = getMusicPlayerStatus(queue)
 
-    // Scenario: Guild Member with admin permissions types /music skip
-    // When: Bot is playing music
-    // Then: Song is skipped
-
-    if (musicPlayerStatus !== 'PLAYING') {
+    if ((await musicPlayerStatus) !== 'PLAYING') {
         await interaction.followUp('No track to skip')
         return
     }
 
     if (roleCanSkip) {
         queue.node.skip()
+        await interaction.followUp('Song skipped by admin')
+        return
     }
-    // Scenario: Guild Member with no admin permissions types /music skip
-    // When: Bot is playing music
-    // Then: Collect members reactions
-    // And: Bots collect within 20 secs voice channel votes
-    // Then: Bots skips the song
 
-    await interaction.followUp('Song skipped')
+    await interaction
+        .followUp('Collecting reactions to skip the song')
+        .then((msg) => {
+            msg.react('⭐')
+            const filter = (reaction, user) => {
+                return '⭐'.includes(reaction.emoji.name) && !user.bot
+            }
+            const reactionCollector = msg.createReactionCollector({
+                filter,
+                time: 15000,
+            })
+
+            reactionCollector.on('end', (collected) => {
+                const membersConnected = queue.channel.members.filter(
+                    (member) => !member.user.bot
+                ).size
+
+                if (
+                    membersConnected === collected.size ||
+                    collected.size >= Math.ceil(membersConnected / 2)
+                ) {
+                    queue.node.skip()
+                    interaction.followUp('Song skipped')
+                } else {
+                    interaction.followUp('Not enough reactions collected')
+                }
+            })
+        })
 }
 
 module.exports = {
