@@ -1,45 +1,47 @@
-const { ActionRowBuilder, ButtonBuilder, SlashCommandBuilder } = require('discord.js');
-const { handleButtonInteraction } = require('../../handlers/queueing/buttonHandler.js');
+const {
+    ActionRowBuilder,
+    ButtonBuilder,
+    SlashCommandBuilder,
+} = require('discord.js')
+
+const path = require('path')
+
+const logger = require('../../commons/Logging/winstonLogger')
+
+const filePath = path.relative(process.cwd.toString(), __dirname)
+
+const {
+    validatePermissions,
+} = require('../../commons/helpers/permissionHelper')
 
 module.exports = {
-	data: new SlashCommandBuilder()
-		.setName('menu')
-		.setDescription('Opens ARKN features menu'),
-	async execute(interaction) {
-		console.log('Executing ARKN MENU');
-		const row = new ActionRowBuilder()
-			.addComponents(
-				new ButtonBuilder()
-					.setCustomId('lobby_menu')
-					.setLabel('Crear Lobby')
-					.setStyle(1),
-				new ButtonBuilder()
-					.setCustomId('queue_menu')
-					.setLabel('Buscar Jugadores')
-					.setStyle(1),
-			);
+    data: new SlashCommandBuilder()
+        .setName('menu')
+        .setDescription('Opens ARKN features menu'),
+    async execute(interaction) {
+        logger.info('Validating member permissions', { filePath })
+        const roleIsValid = await validatePermissions(interaction, 'menu')
 
-		await interaction.reply({
-			components: [row],
-		});
-		console.log(`Menu Showed ${row}`);
+        if (!roleIsValid) {
+            await interaction.reply(
+                "You don't have permissions to use this command."
+            )
+            return
+        }
 
-		console.log('Collecting data');
-		const collector = await interaction.channel.createMessageComponentCollector({
-			filter: i => i.user.id === interaction.user.id,
-			max: 1,
-			time: 60000,
-		});
-		console.log(`Data Collected ${collector}`);
-		collector.on('collect', async (collectorInteraction) => {
-			console.log(`On Collect activated ${collectorInteraction}`);
-			await handleButtonInteraction(collectorInteraction);
-			collector.stop();
-		});
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('lobby_menu')
+                .setLabel('Crear Lobby')
+                .setStyle(1),
+            new ButtonBuilder()
+                .setCustomId('queue_menu')
+                .setLabel('Buscar Jugadores')
+                .setStyle(1)
+        )
 
-		collector.on('end', async () => {
-			console.log('Data Collected');
-			await interaction.editReply({ content: 'Información procesada', components: [] });
-		});
-	},
-};
+        await interaction.reply({
+            components: [row],
+        })
+    },
+}
